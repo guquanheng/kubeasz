@@ -1,0 +1,4 @@
+# 创建CA证书 kubeconfig文件 kube-proxy.kubeconfig等
+- hosts: localhost
+  roles:
+  - deploy

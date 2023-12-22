@@ -1,0 +1,36 @@
+---
+- block: # 将下面name中的任务组合成一个block，如果有任何一个任务失败，整个block都会失败
+  - name: 如果目录不存在则创建此目录 | sysctl-31a, sysctl-31b
+    file:
+      path: '/etc/security/limits.d'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+      state: 'directory'
+
+  - name: 创建文件 -> 10.hardcore.conf | sysctl-31a, sysctl-31b
+    pam_limits: # 模块名称 将限制写入下面dest指定的文件
+      dest: '/etc/security/limits.d/10.hardcore.conf' 
+      domain: '*' # 指定要设置的限制的用户或组
+      limit_type: hard # 指定要设置的限制类型
+      limit_item: core # 指定要设置的限制资源类型
+      value: '0' # 要限制的值
+      comment: Prevent core dumps for all users. These are usually not needed and may contain sensitive information # 一段注释
+
+  - name: 修改文件权限
+    file:
+      path: /etc/security/limits.d/10.hardcore.conf
+      owner: 'root'
+      group: 'root'
+      mode: '0440'
+      state: touch
+      modification_time: preserve
+      access_time: preserve
+
+  when: not os_security_kernel_enable_core_dump | bool # 当变量os_security_kernel_enable_core_dump的值为false时执行上面的任务
+
+- name: 删除文件 -> 10.hardcore.conf | sysctl-31a, sysctl-31b
+  file:
+    path: /etc/security/limits.d/10.hardcore.conf
+    state: absent
+  when: os_security_kernel_enable_core_dump | bool # 当变量os_security_kernel_enable_core_dump的值为true时执行上面的任务

@@ -1,0 +1,53 @@
+---
+- name: 移除未使用的仓库
+  file:
+    name: '/etc/yum.repos.d/{{ item }}.repo'
+    state: 'absent'
+  loop:
+    - 'CentOS-Debuginfo'
+    - 'CentOS-Media'
+    - 'CentOS-Vault'
+  when: os_security_packages_clean | bool
+
+- name: 查找yumm仓库文件
+  find:
+    paths: '/etc/yum.repos.d'
+    patterns: '*.repo'
+  register: yum_repos
+
+# for the 'default([])' see here:
+# https://github.com/dev-sec/ansible-os-hardening/issues/99 and
+# https://stackoverflow.com/questions/37067827/ansible-deprecation-warning-for-undefined-variable-despite-when-clause
+- name: 激活gpg检查
+  replace:
+    path: '{{ item.path }}'
+    regexp: '^\s*gpgcheck.*'
+    replace: 'gpgcheck=1'
+    mode: '0644'
+  with_items:
+    # default的意思是如果yum_repos.files变量未定义，则将其设置为一个空列表
+    - '{{ yum_repos.files | default([]) }}'
+
+# failed_when is needed because by default replace module will fail if the file doesn't exists.
+# status.rc is only defined if an error accrued and only error code (rc) 257 will be ignored.
+# All other errors will still be raised.
+- name: 激活gpg检查1
+  replace:
+    path: '{{ item }}'
+    regexp: '^\s*gpgcheck\W.*'
+    replace: 'gpgcheck=1'
+    mode: '0644'
+  register: status
+  # failed_when 表示命令执行失败的条件，如果成立将其标记为失败
+  # '如果“status.rc”已定义且不等于257，则说明命令执行失败，任务将被标记为失败。
+  failed_when: status.rc is defined and status.rc != 257
+  loop:
+    - '/etc/yum.conf'
+    - '/etc/dnf/dnf.conf'
+    - '/etc/yum/pluginconf.d/rhnplugin.conf'
+
+- name: 移除列表定义的软件包
+  yum:
+    name: '{{ os_security_packages_list }}'
+    state: 'absent'
+  when: os_security_packages_clean | bool

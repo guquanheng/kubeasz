@@ -1,0 +1,8 @@
+---
+# 当系统不适用的包需要清理的变量为真时，使用apt清除在其列表里的包
+- name: 移除不适用的包 | package-01 - package-09
+  apt:
+    name: '{{ os_security_packages_list }}'
+    state: 'absent'
+    purge: 'yes' # 从系统中彻底删除 删除包的配置文件
+  when: os_security_packages_clean | bool

@@ -1,0 +1,36 @@
+role详解
+# 多个playbook组成的项目
+# 结构
+xunjian/
+├── defaults
+│   └── main.yml # 存放默认变量的值
+├── files # 存放copy或script使用的文件 使用src时可以不指定path
+├── handlers  # 存放要处理的事情列表
+│   └── main.yml
+├── meta # 存放元数据信息和此role依赖的其他角色，比如WordPress 需要nginx,php,mysql都运行的情况才能执行
+│   └── main.yml
+│		dependenices:
+│			- role: nginx
+│			- role: php-fpm
+│			- role: mysql
+├── README.md # 使用说明
+├── tasks #存放各个task
+│   └── main.yml
+├── templates # 存放模板文件
+├── tests
+│   ├── inventory
+│   └── test.yml
+└── vars  # 存放变量
+    └── main.yml
+# 创建
+可以使用ansible-galxy init  名称 进行初始化
+# 使用
+ansible-playbook xx.yaml
+---
+  - hosts: websrvs
+	remote_user: root
+	roles:
+	  - mysql
+	  	k1: v1 #定义变量并传递给上面的role
+	  - memcached
+	  - nginx

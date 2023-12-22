@@ -1,0 +1,37 @@
+---
+- name: install modprobe to disable filesystems | os-10
+  package:
+    name: '{{ modprobe_package }}'
+    state: 'present'
+
+- name: check if efi is installed
+  stat:
+    path: "/sys/firmware/efi"
+  register: efi_installed
+
+- name: remove vfat from fs-list if efi is used
+  set_fact: # 设置或更新变量
+    os_unused_filesystems: "{{ os_unused_filesystems | difference('vfat') }}" # 将包含在os_unused_filesystems变量中但不包含在“vfat”字符串中的所有文件系统名称保留下来
+  when:
+    - efi_installed.stat.isdir is defined
+    - efi_installed.stat.isdir
+
+- name: remove used filesystems from fs-list
+  set_fact:
+    # 这个操作的结果是将包含在os_unused_filesystems变量中但不包含在ansible_mounts变量中的文件系统名称保留下来
+    # ansible_mounts变量中包含的是当前系统中已经挂载的文件系统的信息
+    # map函数的作用是将ansible_mounts变量中的每个元素的fstype属性的值提取出来，组成一个列表
+    # difference函数的作用是将包含在os_unused_filesystems变量中但不包含在map函数返回的列表中的所有文件系统名称保留下来(两个集合的差集)
+    # 简单来说就是定义了一个变量列表中存放着文件系统，然后将当前系统中已经挂载的文件系统从这个列表中去除
+    # os_unused_filesystems表示当前系统中未挂载的文件系统
+    os_unused_filesystems: "{{ os_unused_filesystems | difference(ansible_mounts | map(attribute='fstype') | list) }}"
+  # we cannot do this on el6 and below, because these systems don't support the map function
+  when: not ((ansible_facts.os_family in ['Oracle Linux', 'RedHat']) and ansible_facts.distribution_major_version < '7')
+
+- name: disable unused filesystems | os-10 # 禁用未使用的文件系统
+  template:
+    src: 'etc/modprobe.d/modprobe.j2'
+    dest: '/etc/modprobe.d/dev-sec.conf'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'

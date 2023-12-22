@@ -1,0 +1,30 @@
+---
+galaxy_info: # 项目信息
+  author: "Sebastian Gumprich" # 作者
+  description: '这个Ansible角色提供了许多与安全相关的ssh配置，提供了全方位的基础保护'
+  company: Hardening Framework Team # 项目所属
+  license: Apache License 2.0 # 说明遵循的协议
+  min_ansible_version: '2.5' # 指定ansible的最低兼容版本
+  platforms: # 指定各平台的信息设置
+    - name: EL
+      versions:
+        - 7
+        - 8
+    - name: Ubuntu
+      versions:
+        - xenial
+        - bionic
+    - name: Debian
+      versions:
+        - stretch
+        - buster
+    - name: Amazon
+    - name: Fedora
+    - name: Archlinux
+    - name: SmartOS
+    - name: openSUSE
+  galaxy_tags: # 此角色的标签
+    - system
+    - security
+    - hardening
+dependencies: [] # 指定依赖的角色

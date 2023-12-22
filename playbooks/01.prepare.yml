@@ -1,0 +1,28 @@
+# [optional] to synchronize system time of nodes with 'chrony'
+# 可选 使用chrony同步系统时间 
+- hosts:
+  - kube_master
+  - kube_node
+  - etcd
+  - ex_lb
+  - chrony
+  roles:
+  # 当OS_HARDEN变量为true时，执行os-harden角色
+  - { role: os-harden, when: "OS_HARDEN|bool" }
+  # 当主机组的chrony节点数量大于0时，执行chrony角色
+  - { role: chrony, when: "groups['chrony']|length > 0" }
+
+# to create CA, kubeconfig, kube-proxy.kubeconfig etc.
+# 创建 CA证书 kubeconfig文件 kube-proxy.kubeconfig等
+- hosts: localhost
+  roles:
+  - deploy
+
+# prepare tasks for all nodes
+# 准备所有节点的任务
+- hosts:
+  - kube_master
+  - kube_node
+  - etcd
+  roles:
+  - prepare

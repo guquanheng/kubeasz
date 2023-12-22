@@ -1,0 +1,13 @@
+---
+- name: 安装auditd包 | package-08
+  package:
+    name: '{{ auditd_package }}' # 使用变量auditd_package
+    state: 'present'
+
+- name: 设置其配置文件 | package-08
+  template: # 使用模板文件创建文件
+    src: 'etc/audit/auditd.conf.j2' # 模板文件路径，相对于roles/os-harden/templates
+    dest: '/etc/audit/auditd.conf' # 目标文件路径
+    owner: 'root' # 设置属主
+    group: 'root' # 设置属组
+    mode: '0640' # 设置权限

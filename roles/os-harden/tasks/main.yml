@@ -1,0 +1,4 @@
+---
+- import_tasks: hardening.yml # 导入任务
+  ignore_errors: true # 忽略错误
+  when: os_hardening_enabled | bool # 当变量os_hardening_enabled的值为true时执行上面的任务
